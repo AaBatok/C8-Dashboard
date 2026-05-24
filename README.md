@@ -41,8 +41,8 @@ node -v
 ### 1. Clone Repository
 
 ```bash
-git clone https://github.com/USERNAME/c8notif.git
-cd c8notif
+git clone https://github.com/AaBatok/C8-Dashboard
+cd C8-Dashboard
 ```
 
 ### 2. Install Dependencies
