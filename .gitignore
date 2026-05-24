@@ -1,0 +1,16 @@
+# Dependencies
+node_modules/
+
+# Secrets - JANGAN COMMIT!
+accounts.txt
+.env
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Lock files (opsional)
+# package-lock.json

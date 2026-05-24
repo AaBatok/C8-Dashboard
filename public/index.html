@@ -1,0 +1,1317 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>C8 Dashboard — Cantor8 Wallet Report</title>
+    <meta name="description" content="Real-time Cantor8 wallet reward and balance dashboard">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        /* ── Reset & Root ─────────────────────────────── */
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg-primary: #06060e;
+            --bg-secondary: #0c0c1d;
+            --bg-card: rgba(255, 255, 255, 0.03);
+            --bg-card-hover: rgba(255, 255, 255, 0.07);
+            --bg-table-row: rgba(255, 255, 255, 0.015);
+            --border: rgba(255, 255, 255, 0.06);
+            --border-light: rgba(255, 255, 255, 0.12);
+            --text-primary: #f0f0f5;
+            --text-secondary: #9898b0;
+            --text-muted: #5a5a72;
+            --accent-cyan: #22d3ee;
+            --accent-blue: #3b82f6;
+            --accent-purple: #a855f7;
+            --accent-pink: #ec4899;
+            --accent-green: #22c55e;
+            --accent-amber: #f59e0b;
+            --accent-red: #ef4444;
+            --gradient-primary: linear-gradient(135deg, #22d3ee, #3b82f6);
+            --gradient-reward: linear-gradient(135deg, #a855f7, #ec4899);
+            --gradient-balance: linear-gradient(135deg, #22d3ee, #22c55e);
+            --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.5);
+            --shadow-glow-cyan: 0 0 40px rgba(34, 211, 238, 0.15);
+            --shadow-glow-purple: 0 0 40px rgba(168, 85, 247, 0.15);
+            --radius: 16px;
+            --radius-sm: 10px;
+            --radius-xs: 6px;
+            --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            --font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            line-height: 1.5;
+        }
+
+        /* ── Background Effects ───────────────────────── */
+        .bg-effect {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(120px);
+            opacity: 0.12;
+            animation: orbFloat 25s ease-in-out infinite;
+        }
+
+        .orb-1 {
+            width: 700px; height: 700px;
+            background: var(--accent-purple);
+            top: -250px; right: -200px;
+        }
+
+        .orb-2 {
+            width: 550px; height: 550px;
+            background: var(--accent-cyan);
+            bottom: -180px; left: -150px;
+            animation-delay: -8s;
+        }
+
+        .orb-3 {
+            width: 400px; height: 400px;
+            background: var(--accent-blue);
+            top: 40%; left: 45%;
+            animation-delay: -16s;
+        }
+
+        @keyframes orbFloat {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(40px, -40px) scale(1.08); }
+            66% { transform: translate(-30px, 25px) scale(0.94); }
+        }
+
+        /* ── Layout ───────────────────────────────────── */
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ── Header ───────────────────────────────────── */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 2.5rem;
+            padding: 1.25rem 1.75rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            backdrop-filter: blur(24px);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo-icon {
+            font-size: 2rem;
+            width: 52px; height: 52px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--gradient-primary);
+            border-radius: 14px;
+            box-shadow: var(--shadow-glow-cyan);
+        }
+
+        .title {
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.02em;
+        }
+
+        .subtitle {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-weight: 400;
+            margin-top: 1px;
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: rgba(34, 197, 94, 0.08);
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            border-radius: 100px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--accent-green);
+            transition: all 0.3s;
+        }
+
+        .status-badge.loading {
+            background: rgba(245, 158, 11, 0.08);
+            border-color: rgba(245, 158, 11, 0.2);
+            color: var(--accent-amber);
+        }
+
+        .status-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: currentColor;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.85); }
+        }
+
+        /* ── Action Cards ─────────────────────────────── */
+        .actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.25rem;
+            margin-bottom: 2rem;
+        }
+
+        .action-card {
+            position: relative;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 2rem;
+            cursor: pointer;
+            overflow: hidden;
+            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(20px);
+            text-align: left;
+            font-family: inherit;
+            color: inherit;
+            outline: none;
+        }
+
+        .action-card:hover:not(:disabled) {
+            transform: translateY(-4px);
+            border-color: var(--border-light);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .action-card:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .action-gradient {
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            opacity: 0;
+            transition: opacity 0.35s;
+        }
+
+        .action-card:hover:not(:disabled) .action-gradient {
+            opacity: 1;
+        }
+
+        .reward-gradient { background: var(--gradient-reward); }
+        .balance-gradient { background: var(--gradient-balance); }
+
+        .action-content { position: relative; z-index: 1; }
+
+        .action-icon {
+            font-size: 2.25rem;
+            margin-bottom: 0.75rem;
+            display: inline-block;
+        }
+
+        .action-card h2 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 0.35rem;
+            letter-spacing: -0.01em;
+        }
+
+        .action-card p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        .action-meta {
+            display: inline-block;
+            margin-top: 0.75rem;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        /* ── Progress Section ─────────────────────────── */
+        .progress-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem 1.75rem;
+            margin-bottom: 1.5rem;
+            backdrop-filter: blur(20px);
+            display: none;
+            animation: fadeSlideIn 0.4s ease-out;
+        }
+
+        .progress-section.visible { display: block; }
+
+        .progress-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .progress-label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .progress-count {
+            font-size: 0.85rem;
+            font-family: var(--font-mono);
+            font-weight: 600;
+            color: var(--accent-cyan);
+        }
+
+        .progress-bar {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: var(--gradient-primary);
+            border-radius: 3px;
+            transition: width 0.4s ease;
+            position: relative;
+        }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
+            animation: shimmer 1.8s ease-in-out infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .progress-account {
+            margin-top: 0.5rem;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+        }
+
+        /* ── Summary Cards ────────────────────────────── */
+        .summary-section {
+            margin-bottom: 1.5rem;
+            display: none;
+            animation: fadeSlideIn 0.4s ease-out;
+        }
+
+        .summary-section.visible { display: block; }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 1.25rem 1.25rem 1.25rem 1.5rem;
+            backdrop-filter: blur(16px);
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s, border-color 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--border-light);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            left: 0; top: 0; bottom: 0;
+            width: 3px;
+            background: var(--card-accent, var(--accent-cyan));
+        }
+
+        .stat-icon { font-size: 1.35rem; margin-bottom: 0.5rem; }
+
+        .stat-label {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            font-weight: 600;
+        }
+
+        .stat-value {
+            font-size: 1.45rem;
+            font-weight: 800;
+            margin-top: 0.2rem;
+            font-family: var(--font-mono);
+            letter-spacing: -0.02em;
+        }
+
+        /* ── Table Section ────────────────────────────── */
+        .table-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            backdrop-filter: blur(20px);
+            overflow: hidden;
+            display: none;
+            animation: fadeSlideIn 0.4s ease-out;
+        }
+
+        .table-section.visible { display: block; }
+
+        .table-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-xs);
+            padding: 0.5rem 0.85rem;
+            min-width: 240px;
+            transition: border-color 0.2s;
+        }
+
+        .search-box:focus-within {
+            border-color: var(--accent-cyan);
+        }
+
+        .search-icon { font-size: 0.85rem; opacity: 0.6; }
+
+        .search-input {
+            background: none;
+            border: none;
+            outline: none;
+            color: var(--text-primary);
+            font-family: var(--font-sans);
+            font-size: 0.85rem;
+            width: 100%;
+        }
+
+        .search-input::placeholder { color: var(--text-muted); }
+
+        .table-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .btn-export {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-xs);
+            padding: 0.45rem 0.85rem;
+            color: var(--text-secondary);
+            font-family: var(--font-sans);
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-export:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+            border-color: var(--border-light);
+        }
+
+        .result-count {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .table-wrapper {
+            max-height: 70vh;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255,255,255,0.1) transparent;
+        }
+
+        .table-wrapper::-webkit-scrollbar { width: 6px; }
+        .table-wrapper::-webkit-scrollbar-track { background: transparent; }
+        .table-wrapper::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.1);
+            border-radius: 3px;
+        }
+        .table-wrapper::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+
+        .data-table thead th {
+            position: sticky;
+            top: 0;
+            background: var(--bg-secondary);
+            padding: 0.75rem 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+            user-select: none;
+            z-index: 10;
+            transition: color 0.2s, background 0.2s;
+            white-space: nowrap;
+        }
+
+        .data-table thead th:hover {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .data-table thead th.sorted {
+            color: var(--accent-cyan);
+        }
+
+        .sort-arrow {
+            display: inline-block;
+            margin-left: 4px;
+            font-size: 0.65rem;
+            opacity: 0.4;
+            transition: opacity 0.2s;
+        }
+
+        th.sorted .sort-arrow { opacity: 1; }
+
+        .data-table thead th.num {
+            text-align: right;
+        }
+
+        .data-table tbody tr {
+            transition: background 0.15s;
+            animation: rowIn 0.3s ease-out both;
+        }
+
+        .data-table tbody tr:nth-child(even) {
+            background: var(--bg-table-row);
+        }
+
+        .data-table tbody tr:hover {
+            background: var(--bg-card-hover);
+        }
+
+        .data-table td {
+            padding: 0.6rem 1rem;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-primary);
+            white-space: nowrap;
+        }
+
+        .data-table td.num {
+            text-align: right;
+            font-family: var(--font-mono);
+            font-size: 0.82rem;
+            font-weight: 500;
+        }
+
+        .data-table td.name-cell {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .data-table td.no-cell {
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+            font-size: 0.78rem;
+        }
+
+        .data-table tfoot td {
+            padding: 0.75rem 1rem;
+            font-weight: 700;
+            border-top: 2px solid var(--border-light);
+            background: rgba(255, 255, 255, 0.02);
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+        }
+
+        .data-table tfoot td.num {
+            text-align: right;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            border-radius: 100px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+        }
+
+        .badge-ok {
+            background: rgba(34, 197, 94, 0.1);
+            color: var(--accent-green);
+            border: 1px solid rgba(34, 197, 94, 0.2);
+        }
+
+        .badge-error {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--accent-red);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        @keyframes rowIn {
+            from { opacity: 0; transform: translateX(-8px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes fadeSlideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ── Toast ────────────────────────────────────── */
+        .toast-container {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .toast {
+            padding: 0.85rem 1.25rem;
+            border-radius: var(--radius-xs);
+            font-size: 0.85rem;
+            font-weight: 500;
+            backdrop-filter: blur(20px);
+            animation: toastIn 0.35s ease-out, toastOut 0.35s ease-in 3.2s forwards;
+            max-width: 380px;
+        }
+
+        .toast-success {
+            background: rgba(34, 197, 94, 0.12);
+            border: 1px solid rgba(34, 197, 94, 0.25);
+            color: var(--accent-green);
+        }
+
+        .toast-error {
+            background: rgba(239, 68, 68, 0.12);
+            border: 1px solid rgba(239, 68, 68, 0.25);
+            color: var(--accent-red);
+        }
+
+        @keyframes toastIn {
+            from { opacity: 0; transform: translateX(30px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes toastOut {
+            from { opacity: 1; transform: translateX(0); }
+            to { opacity: 0; transform: translateX(30px); }
+        }
+
+        /* ── Footer ───────────────────────────────────── */
+        .footer {
+            text-align: center;
+            padding: 2.5rem 1rem 1rem;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+        }
+
+        /* ── Responsive ───────────────────────────────── */
+        @media (max-width: 768px) {
+            .container { padding: 1rem; }
+            .header { flex-direction: column; gap: 1rem; padding: 1rem; }
+            .actions { grid-template-columns: 1fr; }
+            .action-card { padding: 1.5rem; }
+            .table-toolbar { flex-direction: column; align-items: stretch; }
+            .search-box { min-width: 100%; }
+            .summary-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 480px) {
+            .title { font-size: 1.2rem; }
+            .summary-grid { grid-template-columns: 1fr; }
+            .data-table { font-size: 0.78rem; }
+            .data-table td, .data-table th { padding: 0.5rem 0.6rem; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Background Effects -->
+    <div class="bg-effect">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+
+    <div class="container">
+        <!-- Header -->
+        <header class="header" id="header">
+            <div class="header-left">
+                <div class="logo-icon">⚡</div>
+                <div>
+                    <h1 class="title">C8 Dashboard</h1>
+                    <p class="subtitle">Cantor8 Wallet Report</p>
+                </div>
+            </div>
+            <div class="status-badge" id="status-badge">
+                <span class="status-dot"></span>
+                <span id="status-text">Ready</span>
+            </div>
+        </header>
+
+        <!-- Action Cards -->
+        <section class="actions" id="actions">
+            <button class="action-card" id="btn-reward" onclick="startCheck('reward')">
+                <div class="action-gradient reward-gradient"></div>
+                <div class="action-content">
+                    <div class="action-icon">📊</div>
+                    <h2>Cek Reward</h2>
+                    <p>Check accrued rewards for all accounts</p>
+                    <span class="action-meta" id="reward-meta"></span>
+                </div>
+            </button>
+            <button class="action-card" id="btn-balance" onclick="startCheck('balance')">
+                <div class="action-gradient balance-gradient"></div>
+                <div class="action-content">
+                    <div class="action-icon">💰</div>
+                    <h2>Cek Balance</h2>
+                    <p>Check wallet balance for all accounts</p>
+                    <span class="action-meta" id="balance-meta"></span>
+                </div>
+            </button>
+        </section>
+
+        <!-- Progress -->
+        <section class="progress-section" id="progress-section">
+            <div class="progress-info">
+                <span class="progress-label" id="progress-label">Processing...</span>
+                <span class="progress-count" id="progress-count">0 / 0</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+            <div class="progress-account" id="progress-account"></div>
+        </section>
+
+        <!-- Summary Cards -->
+        <section class="summary-section" id="summary-section">
+            <div class="summary-grid" id="summary-grid"></div>
+        </section>
+
+        <!-- Table -->
+        <section class="table-section" id="table-section">
+            <div class="table-toolbar">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" class="search-input" id="search-input" placeholder="Search accounts..." oninput="handleSearch()">
+                </div>
+                <div class="table-actions">
+                    <button class="btn-export" id="btn-export" onclick="exportCSV()">📥 Export CSV</button>
+                    <span class="result-count" id="result-count"></span>
+                </div>
+            </div>
+            <div class="table-wrapper">
+                <table class="data-table" id="data-table">
+                    <thead id="table-head"></thead>
+                    <tbody id="table-body"></tbody>
+                    <tfoot id="table-foot"></tfoot>
+                </table>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>C8 Dashboard &bull; <span id="footer-time"></span></p>
+        </footer>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <script>
+        // ── State ────────────────────────────────────────
+        let allResults = [];
+        let currentMode = null;
+        let eventSource = null;
+        let sortColumn = null;
+        let sortDirection = 'asc';
+        let totalAccounts = 0;
+
+        // ── Helpers ──────────────────────────────────────
+        function fmtNum(v, decimals) {
+            const n = Number(v || 0);
+            if (!Number.isFinite(n)) return '0';
+            return n.toLocaleString('en-US', {
+                minimumFractionDigits: decimals,
+                maximumFractionDigits: decimals,
+            });
+        }
+
+        function timeAgo(ts) {
+            const diff = Math.floor((Date.now() - ts) / 1000);
+            if (diff < 60) return diff + 's ago';
+            if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+            if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+            return Math.floor(diff / 86400) + 'd ago';
+        }
+
+        function extractAccountNumber(name) {
+            const m = String(name || '').match(/\d+/);
+            return m ? Number(m[0]) : Number.MAX_SAFE_INTEGER;
+        }
+
+        // ── Toast ────────────────────────────────────────
+        function showToast(msg, type) {
+            const el = document.createElement('div');
+            el.className = 'toast toast-' + type;
+            el.textContent = msg;
+            document.getElementById('toast-container').appendChild(el);
+            setTimeout(function() { el.remove(); }, 3600);
+        }
+
+        // ── Status Badge ─────────────────────────────────
+        function setStatus(text, loading) {
+            const badge = document.getElementById('status-badge');
+            document.getElementById('status-text').textContent = text;
+            if (loading) {
+                badge.classList.add('loading');
+            } else {
+                badge.classList.remove('loading');
+            }
+        }
+
+        // ── Buttons ──────────────────────────────────────
+        function setButtonsDisabled(disabled) {
+            document.getElementById('btn-reward').disabled = disabled;
+            document.getElementById('btn-balance').disabled = disabled;
+        }
+
+        // ── Progress ─────────────────────────────────────
+        function showProgress(show) {
+            const el = document.getElementById('progress-section');
+            if (show) {
+                el.classList.add('visible');
+            } else {
+                el.classList.remove('visible');
+            }
+        }
+
+        function updateProgress(current, total, name) {
+            var pct = total > 0 ? Math.round((current / total) * 100) : 0;
+            document.getElementById('progress-label').textContent =
+                currentMode === 'reward' ? '📊 Fetching Rewards...' : '💰 Fetching Balances...';
+            document.getElementById('progress-count').textContent = current + ' / ' + total;
+            document.getElementById('progress-fill').style.width = pct + '%';
+            document.getElementById('progress-account').textContent = name ? ('→ ' + name) : '';
+            document.title = 'C8 (' + current + '/' + total + ')';
+        }
+
+        // ── Summary Cards ────────────────────────────────
+        function updateSummary() {
+            var grid = document.getElementById('summary-grid');
+            var ok = allResults.filter(function(r) { return !r.error; });
+
+            if (currentMode === 'reward') {
+                var totalReward = ok.reduce(function(s, r) { return s + (r.reward || 0); }, 0);
+                var totalVolume = ok.reduce(function(s, r) { return s + (r.volume || 0); }, 0);
+                var totalTxns = ok.reduce(function(s, r) { return s + (r.txns || 0); }, 0);
+
+                grid.innerHTML =
+                    '<div class="stat-card" style="--card-accent: var(--accent-cyan);">' +
+                        '<div class="stat-icon">📦</div>' +
+                        '<div class="stat-label">Total Accounts</div>' +
+                        '<div class="stat-value">' + allResults.length + '</div>' +
+                    '</div>' +
+                    '<div class="stat-card" style="--card-accent: var(--accent-purple);">' +
+                        '<div class="stat-icon">🏆</div>' +
+                        '<div class="stat-label">Total Reward</div>' +
+                        '<div class="stat-value">' + fmtNum(totalReward, 4) + '</div>' +
+                    '</div>' +
+                    '<div class="stat-card" style="--card-accent: var(--accent-blue);">' +
+                        '<div class="stat-icon">📈</div>' +
+                        '<div class="stat-label">Total Volume</div>' +
+                        '<div class="stat-value">$' + fmtNum(totalVolume, 2) + '</div>' +
+                    '</div>' +
+                    '<div class="stat-card" style="--card-accent: var(--accent-amber);">' +
+                        '<div class="stat-icon">🔄</div>' +
+                        '<div class="stat-label">Total Txns</div>' +
+                        '<div class="stat-value">' + fmtNum(totalTxns, 0) + '</div>' +
+                    '</div>';
+            } else {
+                var totalCC = ok.reduce(function(s, r) { return s + (r.cc || 0); }, 0);
+                var totalUSDCx = ok.reduce(function(s, r) { return s + (r.usdcx || 0); }, 0);
+                var totalCETH = ok.reduce(function(s, r) { return s + (r.ceth || 0); }, 0);
+
+                grid.innerHTML =
+                    '<div class="stat-card" style="--card-accent: var(--accent-cyan);">' +
+                        '<div class="stat-icon">📦</div>' +
+                        '<div class="stat-label">Total Accounts</div>' +
+                        '<div class="stat-value">' + allResults.length + '</div>' +
+                    '</div>' +
+                    '<div class="stat-card" style="--card-accent: var(--accent-amber);">' +
+                        '<div class="stat-icon">💎</div>' +
+                        '<div class="stat-label">Total CC</div>' +
+                        '<div class="stat-value">' + fmtNum(totalCC, 2) + '</div>' +
+                    '</div>' +
+                    '<div class="stat-card" style="--card-accent: var(--accent-green);">' +
+                        '<div class="stat-icon">💵</div>' +
+                        '<div class="stat-label">Total USDCx</div>' +
+                        '<div class="stat-value">' + fmtNum(totalUSDCx, 4) + '</div>' +
+                    '</div>' +
+                    '<div class="stat-card" style="--card-accent: var(--accent-blue);">' +
+                        '<div class="stat-icon">🔷</div>' +
+                        '<div class="stat-label">Total cETH</div>' +
+                        '<div class="stat-value">' + fmtNum(totalCETH, 6) + '</div>' +
+                    '</div>';
+            }
+
+            document.getElementById('summary-section').classList.add('visible');
+        }
+
+        // ── Table Rendering ──────────────────────────────
+        function getRewardColumns() {
+            return [
+                { key: '_no', label: 'No', cls: 'no-cell' },
+                { key: 'name', label: 'Name', cls: 'name-cell' },
+                { key: 'reward', label: 'Reward', cls: 'num', decimals: 4 },
+                { key: 'volume', label: 'Volume', cls: 'num', decimals: 2 },
+                { key: 'txns', label: 'Txns', cls: 'num', decimals: 0 },
+                { key: 'rank', label: 'Rank', cls: 'num', decimals: 0 },
+                { key: '_status', label: 'Status', cls: '' },
+            ];
+        }
+
+        function getBalanceColumns() {
+            return [
+                { key: '_no', label: 'No', cls: 'no-cell' },
+                { key: 'name', label: 'Name', cls: 'name-cell' },
+                { key: 'cc', label: 'CC', cls: 'num', decimals: 2 },
+                { key: 'usdcx', label: 'USDCx', cls: 'num', decimals: 4 },
+                { key: 'ceth', label: 'cETH', cls: 'num', decimals: 6 },
+                { key: '_status', label: 'Status', cls: '' },
+            ];
+        }
+
+        function getColumns() {
+            return currentMode === 'reward' ? getRewardColumns() : getBalanceColumns();
+        }
+
+        function buildTableHead() {
+            var cols = getColumns();
+            var thead = document.getElementById('table-head');
+            var tr = document.createElement('tr');
+
+            cols.forEach(function(col) {
+                var th = document.createElement('th');
+                if (col.cls === 'num' || col.cls === 'no-cell') th.classList.add('num');
+
+                var isSorted = sortColumn === col.key;
+                if (isSorted) th.classList.add('sorted');
+
+                var arrow = '';
+                if (col.key !== '_no' && col.key !== '_status') {
+                    if (isSorted) {
+                        arrow = ' <span class="sort-arrow">' + (sortDirection === 'asc' ? '▲' : '▼') + '</span>';
+                    } else {
+                        arrow = ' <span class="sort-arrow">⬍</span>';
+                    }
+                }
+
+                th.innerHTML = col.label + arrow;
+                th.onclick = function() { handleSort(col.key); };
+                tr.appendChild(th);
+            });
+
+            thead.innerHTML = '';
+            thead.appendChild(tr);
+        }
+
+        function renderTableBody() {
+            var data = getSortedFiltered();
+            var cols = getColumns();
+            var tbody = document.getElementById('table-body');
+            tbody.innerHTML = '';
+
+            data.forEach(function(item) {
+                var row = item.row;
+                var idx = item.index;
+                var tr = document.createElement('tr');
+                tr.style.animationDelay = '0s';
+
+                cols.forEach(function(col) {
+                    var td = document.createElement('td');
+                    if (col.cls) td.className = col.cls;
+
+                    if (col.key === '_no') {
+                        td.textContent = idx + 1;
+                    } else if (col.key === '_status') {
+                        if (row.error) {
+                            td.innerHTML = '<span class="badge badge-error">✗ ERROR</span>';
+                            td.title = row.error;
+                        } else {
+                            td.innerHTML = '<span class="badge badge-ok">✓ OK</span>';
+                        }
+                    } else if (col.key === 'rank') {
+                        var v = row[col.key];
+                        td.textContent = v ? '#' + v : '-';
+                    } else if (col.cls === 'num') {
+                        td.textContent = fmtNum(row[col.key] || 0, col.decimals);
+                    } else {
+                        td.textContent = row[col.key] || '';
+                    }
+
+                    tr.appendChild(td);
+                });
+
+                tbody.appendChild(tr);
+            });
+
+            updateTableFooter(data);
+            document.getElementById('result-count').textContent = data.length + ' of ' + allResults.length + ' accounts';
+        }
+
+        function updateTableFooter(data) {
+            var cols = getColumns();
+            var tfoot = document.getElementById('table-foot');
+            var ok = data.map(function(d) { return d.row; }).filter(function(r) { return !r.error; });
+            var tr = document.createElement('tr');
+
+            cols.forEach(function(col) {
+                var td = document.createElement('td');
+                if (col.cls === 'num') td.classList.add('num');
+
+                if (col.key === '_no') {
+                    td.textContent = '';
+                } else if (col.key === 'name') {
+                    td.textContent = 'TOTAL (' + allResults.length + ')';
+                    td.style.fontWeight = '700';
+                } else if (col.key === '_status') {
+                    td.textContent = ok.length + ' ok';
+                } else if (col.key === 'rank') {
+                    td.textContent = '-';
+                } else if (col.cls === 'num') {
+                    var sum = ok.reduce(function(s, r) { return s + (Number(r[col.key]) || 0); }, 0);
+                    td.textContent = fmtNum(sum, col.decimals);
+                } else {
+                    td.textContent = '';
+                }
+
+                tr.appendChild(td);
+            });
+
+            tfoot.innerHTML = '';
+            tfoot.appendChild(tr);
+        }
+
+        function addSingleRow(row) {
+            var cols = getColumns();
+            var tbody = document.getElementById('table-body');
+            var idx = allResults.length - 1;
+            var tr = document.createElement('tr');
+
+            cols.forEach(function(col) {
+                var td = document.createElement('td');
+                if (col.cls) td.className = col.cls;
+
+                if (col.key === '_no') {
+                    td.textContent = idx + 1;
+                } else if (col.key === '_status') {
+                    if (row.error) {
+                        td.innerHTML = '<span class="badge badge-error">✗ ERROR</span>';
+                        td.title = row.error;
+                    } else {
+                        td.innerHTML = '<span class="badge badge-ok">✓ OK</span>';
+                    }
+                } else if (col.key === 'rank') {
+                    var v = row[col.key];
+                    td.textContent = v ? '#' + v : '-';
+                } else if (col.cls === 'num') {
+                    td.textContent = fmtNum(row[col.key] || 0, col.decimals);
+                } else {
+                    td.textContent = row[col.key] || '';
+                }
+
+                tr.appendChild(td);
+            });
+
+            tbody.appendChild(tr);
+            document.getElementById('result-count').textContent = allResults.length + ' accounts';
+
+            // Auto-scroll to bottom
+            var wrapper = document.querySelector('.table-wrapper');
+            wrapper.scrollTop = wrapper.scrollHeight;
+        }
+
+        // ── Sort & Filter ────────────────────────────────
+        function getSortedFiltered() {
+            var data = allResults.map(function(r, i) { return { row: r, index: i }; });
+
+            if (sortColumn && sortColumn !== '_no' && sortColumn !== '_status') {
+                data.sort(function(a, b) {
+                    var va = a.row[sortColumn];
+                    var vb = b.row[sortColumn];
+                    if (sortColumn === 'name') {
+                        var na = extractAccountNumber(va);
+                        var nb = extractAccountNumber(vb);
+                        if (na !== nb) return sortDirection === 'asc' ? na - nb : nb - na;
+                        return sortDirection === 'asc' ? String(va).localeCompare(String(vb)) : String(vb).localeCompare(String(va));
+                    }
+                    va = Number(va) || 0;
+                    vb = Number(vb) || 0;
+                    return sortDirection === 'asc' ? va - vb : vb - va;
+                });
+            }
+
+            var q = document.getElementById('search-input').value.toLowerCase().trim();
+            if (q) {
+                data = data.filter(function(d) {
+                    return (d.row.name || '').toLowerCase().indexOf(q) !== -1;
+                });
+            }
+
+            return data;
+        }
+
+        function handleSort(key) {
+            if (key === '_no' || key === '_status') return;
+            if (sortColumn === key) {
+                sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortColumn = key;
+                sortDirection = 'asc';
+            }
+            buildTableHead();
+            renderTableBody();
+        }
+
+        function handleSearch() {
+            renderTableBody();
+        }
+
+        // ── Export CSV ───────────────────────────────────
+        function exportCSV() {
+            if (!allResults.length) return;
+            var cols = getColumns().filter(function(c) { return c.key !== '_no' && c.key !== '_status'; });
+            var header = cols.map(function(c) { return c.label; }).join(',');
+            var lines = [header];
+
+            allResults.forEach(function(r) {
+                var row = cols.map(function(c) {
+                    var v = r[c.key];
+                    if (c.key === 'rank') return v ? v : '';
+                    if (c.cls === 'num') return Number(v || 0).toFixed(c.decimals);
+                    return String(v || '');
+                });
+                lines.push(row.join(','));
+            });
+
+            var csv = lines.join('\n');
+            var blob = new Blob([csv], { type: 'text/csv' });
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            var dateStr = new Date().toISOString().slice(0, 10);
+            a.download = 'c8_' + currentMode + '_' + dateStr + '.csv';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // ── SSE Connection ───────────────────────────────
+        function startCheck(mode) {
+            if (eventSource) {
+                eventSource.close();
+                eventSource = null;
+            }
+
+            currentMode = mode;
+            allResults = [];
+            sortColumn = null;
+            sortDirection = 'asc';
+            totalAccounts = 0;
+
+            // UI state
+            setButtonsDisabled(true);
+            setStatus('Loading...', true);
+            showProgress(true);
+            updateProgress(0, 0, 'Starting...');
+
+            // Reset table
+            document.getElementById('table-body').innerHTML = '';
+            document.getElementById('table-foot').innerHTML = '';
+            document.getElementById('search-input').value = '';
+            document.getElementById('summary-section').classList.remove('visible');
+            document.getElementById('table-section').classList.add('visible');
+            buildTableHead();
+
+            // Scroll to progress
+            document.getElementById('progress-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+            // Start SSE
+            eventSource = new EventSource('/api/' + mode + '/stream');
+
+            eventSource.onmessage = function(e) {
+                var msg;
+                try { msg = JSON.parse(e.data); } catch (err) { return; }
+
+                switch (msg.type) {
+                    case 'start':
+                        totalAccounts = msg.total;
+                        updateProgress(0, msg.total, '');
+                        break;
+
+                    case 'progress':
+                        updateProgress(msg.current, msg.total, msg.name);
+                        break;
+
+                    case 'result':
+                        allResults.push(msg.data);
+                        addSingleRow(msg.data);
+                        updateSummary();
+                        updateTableFooter(allResults.map(function(r, i) { return { row: r, index: i }; }));
+                        break;
+
+                    case 'done':
+                        finishCheck(msg.timestamp);
+                        break;
+
+                    case 'error':
+                        showToast('Error: ' + msg.message, 'error');
+                        setButtonsDisabled(false);
+                        setStatus('Error', false);
+                        showProgress(false);
+                        break;
+                }
+            };
+
+            eventSource.onerror = function() {
+                if (eventSource) {
+                    eventSource.close();
+                    eventSource = null;
+                }
+                if (allResults.length > 0) {
+                    finishCheck(Date.now());
+                } else {
+                    setButtonsDisabled(false);
+                    setStatus('Connection lost', false);
+                    showProgress(false);
+                    showToast('Connection lost. Please try again.', 'error');
+                }
+            };
+        }
+
+        function finishCheck(timestamp) {
+            if (eventSource) {
+                eventSource.close();
+                eventSource = null;
+            }
+
+            showProgress(false);
+            setButtonsDisabled(false);
+            setStatus('Ready', false);
+            document.title = 'C8 Dashboard';
+
+            // Update the meta text on the action card
+            var metaId = currentMode + '-meta';
+            var metaEl = document.getElementById(metaId);
+            if (metaEl && timestamp) {
+                metaEl.textContent = '✅ Last check: ' + new Date(timestamp).toLocaleTimeString('en-GB', { hour12: false });
+            }
+
+            var ok = allResults.filter(function(r) { return !r.error; });
+            var errCount = allResults.length - ok.length;
+            var msg = '✅ ' + (currentMode === 'reward' ? 'Reward' : 'Balance') + ' check complete — ' + ok.length + ' OK';
+            if (errCount > 0) msg += ', ' + errCount + ' errors';
+            showToast(msg, 'success');
+
+            // Final re-sort and re-render
+            renderTableBody();
+            updateSummary();
+
+            // Update footer time
+            document.getElementById('footer-time').textContent = new Date().toLocaleString('en-GB', { hour12: false });
+        }
+
+        // ── Init on Page Load ────────────────────────────
+        window.addEventListener('DOMContentLoaded', async function() {
+            document.getElementById('footer-time').textContent = new Date().toLocaleString('en-GB', { hour12: false });
+
+            try {
+                var res = await fetch('/api/status');
+                var status = await res.json();
+
+                // Show cached timestamps
+                if (status.reward.cached) {
+                    document.getElementById('reward-meta').textContent = '📄 Cached: ' + timeAgo(status.reward.cached.timestamp) + ' (' + status.reward.cached.count + ' accounts)';
+                }
+                if (status.balance.cached) {
+                    document.getElementById('balance-meta').textContent = '📄 Cached: ' + timeAgo(status.balance.cached.timestamp) + ' (' + status.balance.cached.count + ' accounts)';
+                }
+
+                // Auto-subscribe if something is running
+                if (status.reward.running) {
+                    startCheck('reward');
+                } else if (status.balance.running) {
+                    startCheck('balance');
+                }
+            } catch (e) {
+                // Server not ready yet, ignore
+            }
+        });
+    </script>
+</body>
+</html>
