@@ -224,7 +224,7 @@ journalctl -u c8-dashboard -f
 ## 🗂️ Struktur File
 
 ```
-c8notif/
+C8-Dashboard/
 ├── report.js          # Server utama (Express + SSE + API)
 ├── config.json        # Konfigurasi API endpoint & derivation
 ├── accounts.txt       # Daftar mnemonic (1 per baris) ← BUAT INI
